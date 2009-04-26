@@ -1,5 +1,8 @@
 POE::Component::Win32::Service
 ==============================
 
+1.04	Tue Sep 26 16:56:06 BST 2006
+	- Switched to Module::Install
+
 1.03	Wed Sep 13 09:46:34 BST 2006
 	- CPANTS fixes.
