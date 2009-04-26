@@ -1,0 +1,5 @@
+POE::Component::Win32::Service
+==============================
+
+1.03	Wed Sep 13 09:46:34 BST 2006
+	- CPANTS fixes.

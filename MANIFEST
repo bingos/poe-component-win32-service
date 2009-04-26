@@ -1,7 +1,11 @@
 lib/POE/Component/Win32/Service.pm
+examples/synopsis.pl
 t/1.t
 t/2.t
+t/3.t
+t/4.t
 README
+Changes
 MANIFEST
 Makefile.PL
 META.yml                                 Module meta-data (added by MakeMaker)

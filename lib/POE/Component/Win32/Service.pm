@@ -18,7 +18,7 @@ use Win32::Service qw(StartService StopService GetStatus PauseService ResumeServ
 use Carp qw(carp croak);
 use vars qw($VERSION);
 
-$VERSION = '1.02';
+$VERSION = '1.03';
 
 our %cmd_map = ( qw(start StartService stop StopService restart RestartService status GetStatus pause PauseService resume ResumeService services GetServices) );
 
@@ -35,13 +35,13 @@ sub spawn {
 
   $self->{session_id} = POE::Session->create(
 	  object_states => [
-	  	$self => { 'start'    => 'request',
-			   'stop'     => 'request',
-			   'restart'  => 'request',
-			   'status'   => 'request',
-			   'pause'    => 'request',
-			   'resume'   => 'request',
-			   'services' => 'request',
+	  	$self => { 'start'    => '_request',
+			   'stop'     => '_request',
+			   'restart'  => '_request',
+			   'status'   => '_request',
+			   'pause'    => '_request',
+			   'resume'   => '_request',
+			   'services' => '_request',
 			   'shutdown' => '_shutdown',
 		},
 	  	$self => [ qw(_start wheel_close wheel_err wheel_out wheel_stderr _sig_chld) ],
@@ -68,7 +68,7 @@ sub _start {
   $kernel->sig( 'CHLD' => '_sig_chld' );
 
   $self->{wheel} = POE::Wheel::Run->new(
-	  Program     => \&process_requests,
+	  Program     => \&_process_requests,
 	  CloseOnCall => 0,
 	  StdinFilter  => POE::Filter::Reference->new(),   # Child accepts input as lines.
 	  StdoutFilter => POE::Filter::Reference->new(), # Child output is a stream.
@@ -99,7 +99,7 @@ sub _shutdown {
   undef;
 }
 
-sub request {
+sub _request {
   my ($kernel,$self,$state,$sender) = @_[KERNEL,OBJECT,STATE,SENDER];
   $sender = $sender->ID();
   
@@ -185,7 +185,7 @@ sub shutdown {
 
 # Main Wheel::Run process sub
 
-sub process_requests {
+sub _process_requests {
   binmode(STDIN); binmode(STDOUT);
   my $raw;
   my $size = 4096;
@@ -205,7 +205,7 @@ sub process_requests {
 	     if ( GetServices( $host, $hashref ) ) {
 		$req->{result} = $hashref;
 	     } else {
-		$req->{error} = &error_codes();
+		$req->{error} = &_error_codes();
 	     }
 	     last SWITCH;
 	  }
@@ -214,7 +214,7 @@ sub process_requests {
 	     if ( GetStatus( $host, $service, $hashref ) ) {
 		$req->{result} = $hashref;
 	     } else {
-		$req->{error} = &error_codes();
+		$req->{error} = &_error_codes();
 	     }
 	     last SWITCH;
 	  }
@@ -222,20 +222,20 @@ sub process_requests {
 	     if ( StopService( $host, $service ) ) {
 		$req->{result}++;
 	     } else {
-		$req->{error} = &error_codes();
+		$req->{error} = &_error_codes();
 	     }
 	     sleep 2;
 	     if ( StartService( $host, $service ) ) {
 		$req->{result}++;
 	     } else {
-		$req->{error} = &error_codes();
+		$req->{error} = &_error_codes();
 	     }
 	     last SWITCH;
 	  }
 	  if ( &{ $req->{func} }( $host, $service ) ) {
 	  	$req->{result} = 1;
 	  } else {
-		$req->{error} = &error_codes();
+		$req->{error} = &_error_codes();
 	  }
 	}
 	my $replies = $filter->put( [ $req ] );
@@ -244,7 +244,7 @@ sub process_requests {
   }
 }
 
-sub error_codes {
+sub _error_codes {
   my $error = Win32::GetLastError();
   return [ $error, Win32::FormatMessage($error) ];
 }
