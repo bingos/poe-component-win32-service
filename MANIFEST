@@ -6,6 +6,7 @@ mylib/Devel/AssertOS/Cygwin.pm
 mylib/Devel/AssertOS/MSWin32.pm
 mylib/Devel/CheckOS.pm
 inc/Module/Install.pm
+inc/Module/Install/AuthorTests.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
 inc/Module/Install/Fetch.pm
@@ -20,5 +21,5 @@ META.yml
 README
 t/00_startup.t
 t/01_service.t
-t/99_pod.t
-t/99_pod_coverage.t
+xt/99_pod.t
+xt/99_pod_coverage.t
