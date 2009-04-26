@@ -19,5 +19,6 @@ MANIFEST			This list of files
 META.yml
 README
 t/00_startup.t
+t/01_service.t
 t/99_pod.t
 t/99_pod_coverage.t

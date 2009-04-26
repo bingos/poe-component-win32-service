@@ -1,6 +1,9 @@
 POE::Component::Win32::Service
 ==============================
 
+1.18	Tue Feb 26 14:06:29 GMT 2008
+	- Added services test
+
 1.16	Fri Feb 22 12:07:34 GMT 2008
 	- Fixed the use lib path in Makefile.PL
 
