@@ -1,5 +1,6 @@
 lib/POE/Component/Win32/Service.pm
 t/1.t
+t/2.t
 README
 MANIFEST
 Makefile.PL
