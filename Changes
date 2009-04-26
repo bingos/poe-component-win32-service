@@ -1,6 +1,11 @@
 POE::Component::Win32::Service
 ==============================
 
+1.05	Wed Oct 25 14:34:03 BST 2006
+	- Added another example script
+	- Restart wheel on error unless shutting
+	  down.
+
 1.04	Tue Sep 26 16:56:06 BST 2006
 	- Switched to Module::Install
 

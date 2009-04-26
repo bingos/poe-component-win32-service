@@ -1,5 +1,6 @@
 Changes
 examples/synopsis.pl
+examples/services.pl
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Makefile.pm

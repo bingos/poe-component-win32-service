@@ -6,7 +6,7 @@ license 'perl';
 WriteMakefile(
 			  'NAME'	=> 'POE::Component::Win32::Service',
 			  'PREREQ_PM' => {
-					  'POE'    => 0.31,
+					  'POE'    => 0.38,
 					  'Win32::Service' => 0,
 					  'Carp'   => 0,
 					 },

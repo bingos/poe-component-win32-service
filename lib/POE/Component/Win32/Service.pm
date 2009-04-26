@@ -9,7 +9,7 @@ package POE::Component::Win32::Service;
 
 use strict;
 use warnings;
-use POE 0.31;
+use POE 0.38;
 use POE::Wheel::Run;
 use POE::Filter::Line;
 use POE::Filter::Reference;
@@ -18,7 +18,7 @@ use Win32::Service qw(StartService StopService GetStatus PauseService ResumeServ
 use Carp qw(carp croak);
 use vars qw($VERSION);
 
-$VERSION = '1.04';
+$VERSION = '1.05';
 
 our %cmd_map = ( qw(start StartService stop StopService restart RestartService status GetStatus pause PauseService resume ResumeService services GetServices) );
 
@@ -44,7 +44,7 @@ sub spawn {
 			   'services' => '_request',
 			   'shutdown' => '_shutdown',
 		},
-	  	$self => [ qw(_start wheel_close wheel_err wheel_out wheel_stderr _sig_chld) ],
+	  	$self => [ qw(_start _wheel_close _wheel_err _wheel_out _wheel_stderr _restart _sig_chld) ],
 	  ],
 	  ( ( defined ( $options ) and ref ( $options ) eq 'HASH' ) ? ( options => $options ) : () ),
   )->ID();
@@ -65,7 +65,12 @@ sub _start {
 	$kernel->refcount_increment( $self->{session_id} => __PACKAGE__ );
   }
 
-  $kernel->sig( 'CHLD' => '_sig_chld' );
+  $kernel->yield( '_restart' );
+  undef;
+}
+
+sub _restart {
+  my ($kernel,$self) = @_[KERNEL,OBJECT];
 
   $self->{wheel} = POE::Wheel::Run->new(
 	  Program     => \&_process_requests,
@@ -73,17 +78,18 @@ sub _start {
 	  StdinFilter  => POE::Filter::Reference->new(),   # Child accepts input as lines.
 	  StdoutFilter => POE::Filter::Reference->new(), # Child output is a stream.
 	  StderrFilter => POE::Filter::Line->new(),   # Child errors are lines.
-	  StdoutEvent => 'wheel_out',
-	  StderrEvent => 'wheel_stderr',
-	  ErrorEvent  => 'wheel_err',             # Event to emit on errors.
-          CloseEvent  => 'wheel_close',     # Child closed all output.
+	  StdoutEvent => '_wheel_out',
+	  StderrEvent => '_wheel_stderr',
+	  ErrorEvent  => '_wheel_err',             # Event to emit on errors.
+          CloseEvent  => '_wheel_close',     # Child closed all output.
   );
+
+  $kernel->sig_child( $self->{wheel}->PID(), '_sig_chld' ) if $self->{wheel};
 
   undef;
 }
 
 sub _sig_chld {
-  $_[KERNEL]->sig( 'CHLD' );
   $_[KERNEL]->sig_handled();
 }
 
@@ -95,6 +101,7 @@ sub _shutdown {
   } else {
 	$kernel->refcount_decrement( $self->{session_id} => __PACKAGE__ );
   }
+  $self->{_shutdown} = 1;
   $self->{wheel}->shutdown_stdin if $self->{wheel};
   undef;
 }
@@ -133,7 +140,7 @@ sub _request {
   undef;
 }
 
-sub wheel_out {
+sub _wheel_out {
   my ($kernel,$self,$input) = @_[KERNEL,OBJECT,ARG0];
   delete $input->{func};
   my $session = delete $input->{session};
@@ -143,20 +150,21 @@ sub wheel_out {
   undef;
 }
 
-sub wheel_stderr {
+sub _wheel_stderr {
   my ($kernel,$self,$input) = @_[KERNEL,OBJECT,ARG0];
   warn "$input\n" if $self->{debug};
   undef;
 }
 
-sub wheel_err {
-  my ($self,$operation, $errnum, $errstr, $wheel_id) = @_[OBJECT,ARG0..ARG3];
+sub _wheel_err {
+  my ($kernel,$self,$operation, $errnum, $errstr, $wheel_id) = @_[KERNEL,OBJECT,ARG0..ARG3];
   warn "Wheel $wheel_id generated $operation error $errnum: $errstr\n" if $self->{debug};
   delete $self->{wheel};
+  $kernel->yield( '_restart' ) unless $self->{_shutdown};
   undef;
 }
 
-sub wheel_close {
+sub _wheel_close {
   warn "Wheel closed\n" if $_[OBJECT]->{debug};
   delete $_[OBJECT]->{wheel};
   undef;
