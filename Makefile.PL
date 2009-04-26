@@ -1,4 +1,4 @@
-use lib 'inc'; use Devel::AssertOS qw(Cygwin MSWin32);
+use lib 'mylib'; use Devel::AssertOS qw(Cygwin MSWin32);
 use inc::Module::Install;
 name 'POE-Component-Win32-Service';
 author 'Chris Williams <chris@bingosnet.co.uk>';

@@ -1,6 +1,9 @@
 POE::Component::Win32::Service
 ==============================
 
+1.16	Fri Feb 22 12:07:34 GMT 2008
+	- Fixed the use lib path in Makefile.PL
+
 1.14	Wed Feb 20 19:16:23 GMT 2008
 	- Oops forgot to no_index 'mylib'.
 
