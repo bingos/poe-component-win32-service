@@ -7,6 +7,8 @@ package POE::Component::Win32::Service;
 # distribution for details.
 #
 
+use strict;
+use warnings;
 use POE 0.31;
 use POE::Wheel::Run;
 use POE::Filter::Line;
@@ -16,14 +18,14 @@ use Win32::Service qw(StartService StopService GetStatus PauseService ResumeServ
 use Carp qw(carp croak);
 use vars qw($VERSION);
 
-$VERSION = '0.01';
+$VERSION = '1.00';
 
 our %cmd_map = ( qw(start StartService stop StopService restart RestartService status GetStatus pause PauseService resume ResumeService services GetServices) );
 
 
 sub spawn {
   my ($package) = shift;
-  croak "$type needs an even number of parameters" if @_ & 1;
+  croak "$package needs an even number of parameters" if @_ & 1;
   my %params = @_;
 
   foreach my $param ( keys %params ) {
@@ -43,8 +45,9 @@ sub spawn {
 			   'pause'    => 'request',
 			   'resume'   => 'request',
 			   'services' => 'request',
+			   'shutdown' => '_shutdown',
 		},
-	  	$self => [ qw(_start shutdown wheel_close wheel_err wheel_out wheel_stderr) ],
+	  	$self => [ qw(_start wheel_close wheel_err wheel_out wheel_stderr) ],
 	  ],
 	  ( ( defined ( $options ) and ref ( $options ) eq 'HASH' ) ? ( options => $options ) : () ),
   )->ID();
@@ -80,7 +83,7 @@ sub _start {
   undef;
 }
 
-sub shutdown {
+sub _shutdown {
   my ($kernel,$self) = @_[KERNEL,OBJECT];
 
   if ( $self->{alias} ) {
@@ -148,18 +151,33 @@ sub wheel_stderr {
 }
 
 sub wheel_err {
-    my ($operation, $errnum, $errstr, $wheel_id) = @_[ARG0..ARG3];
+    my ($self,$operation, $errnum, $errstr, $wheel_id) = @_[OBJECT,ARG0..ARG3];
     warn "Wheel $wheel_id generated $operation error $errnum: $errstr\n" if ( $self->{debug} );
 }
 
 sub wheel_close {
-	warn "Wheel closed\n" if ( $self->{debug} );
+	warn "Wheel closed\n" if ( $_[OBJECT]->{debug} );
 }
 
 # Object methods
 
 sub session_id {
   return $_[0]->{session_id};
+}
+
+sub yield {
+   my ($self) = shift;
+   $poe_kernel->post( $self->session_id() => @_ );
+}
+
+sub call {
+   my ($self) = shift;
+   $poe_kernel->call( $self->session_id() => @_ );
+}
+
+sub shutdown {
+   my ($self) = shift;
+   $self->yield( 'shutdown' );
 }
 
 # Main Wheel::Run process sub
@@ -237,25 +255,40 @@ POE::Component::Win32::Service - A POE component that provides non-blocking acce
 
 =head1 SYNOPSIS
 
-use POE::Component::Win32::Service;
+  use strict;
+  use POE qw(Component::Win32::Service);
 
-my ($poco) = POE::Component::Win32::Service->spawn( alias => 'win32-service', debug => 1, options => { trace => 1 } );
+  my ($poco) = POE::Component::Win32::Service->spawn( alias => 'win32-service', debug => 1, options => { trace => 1 } );
 
-# Start your POE sessions
+  # Start your POE sessions
 
-$kernel->post( 'win32-service' => restart => { host => 'win32server', 
+  POE::Session->create(
+  	package_states => [
+		'main' => [ qw(_start result) ],
+	],
+  );
+
+  $poe_kernel->run();
+  exit 0;
+
+  sub _start {
+    $_[KERNEL]->post( 'win32-service' => restart => { host => 'win32server', 
 					       service => 'someservice',
 					       event => 'result' } );
-
-sub result {
-  my ($kernel,$ref) = @_[KERNEL,ARG0];
-
-  if ( $ref->{result} ) {
-  	print STDOUT "Service " . $ref->{service} . " was restarted\n";
-  } else {
-  	print STDERR join(' ', @{ $ref->{error} ) . "\n";
+    undef;
   }
-}
+
+  sub result {
+    my ($kernel,$ref) = @_[KERNEL,ARG0];
+
+    if ( $ref->{result} ) {
+  	print STDOUT "Service " . $ref->{service} . " was restarted\n";
+    } else {
+  	print STDERR join(' ', @{ $ref->{error} } ) . "\n";
+    }
+    $kernel->post( 'win32-service' => 'shutdown' );
+    undef;
+  }
 
 =head1 DESCRIPTION
 
@@ -279,6 +312,18 @@ options that are passed to the component's session creator.
 
 Takes no arguments, returns the L<POE::Session|POE::Session> ID of the component. Useful if you don't want to use
 aliases.
+
+=item yield
+
+This method provides an alternative object based means of posting events to the component. First argument is the event to post, following arguments are sent as arguments to the resultant post.
+
+  $poco->yield( 'restart' => { host => 'win32server', service => 'someservice', event => 'result' } );
+
+=item call
+
+This method provides an alternative object based means of calling events to the component. First argument is the event to call, following arguments are sent as arguments to the resultant call.
+
+  $poco->call( 'restart' => { host => 'win32server', service => 'someservice', event => 'result' } );
 
 =back
 
@@ -319,6 +364,10 @@ Retrieves the status of the requested service on the requested host.
 =item services
 
 Retrieves a list of services on the requested host.
+
+=item shutdown
+
+Takes no arguments. Terminates the component.
 
 =back
 
