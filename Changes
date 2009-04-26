@@ -1,6 +1,9 @@
 POE::Component::Win32::Service
 ==============================
 
+1.09	Mon Jan  7 10:18:48 GMT 2008
+	- Tidied up test names
+
 1.08	Wed Oct 31 13:41:12 GMT 2007
 	- Updated Module::Install to 0.68
 

@@ -11,10 +11,9 @@ inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/POE/Component/Win32/Service.pm
 Makefile.PL
-MANIFEST
-META.yml			Module meta-data (added by MakeMaker)
+MANIFEST			This list of files
+META.yml
 README
-t/1.t
-t/2.t
-t/3.t
-t/4.t
+t/00_startup.t
+t/99_pod.t
+t/99_pod_coverage.t
