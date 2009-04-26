@@ -1,10 +1,10 @@
 Changes
 examples/services.pl
 examples/synopsis.pl
-inc/Devel/AssertOS.pm
-inc/Devel/AssertOS/Cygwin.pm
-inc/Devel/AssertOS/MSWin32.pm
-inc/Devel/CheckOS.pm
+mylib/Devel/AssertOS.pm
+mylib/Devel/AssertOS/Cygwin.pm
+mylib/Devel/AssertOS/MSWin32.pm
+mylib/Devel/CheckOS.pm
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
