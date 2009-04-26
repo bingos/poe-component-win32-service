@@ -18,7 +18,7 @@ use Win32::Service qw(StartService StopService GetStatus PauseService ResumeServ
 use Carp qw(carp croak);
 use vars qw($VERSION);
 
-$VERSION = '1.00';
+$VERSION = '1.01';
 
 our %cmd_map = ( qw(start StartService stop StopService restart RestartService status GetStatus pause PauseService resume ResumeService services GetServices) );
 
@@ -196,6 +196,7 @@ sub process_requests {
 	my $service = $req->{service};
 
 	SWITCH: {
+	  no strict 'refs';
 	  if ( $req->{func} eq 'GetServices' ) {
 	     my ($hashref) = { };
 	     if ( GetServices( $host, $hashref ) ) {
