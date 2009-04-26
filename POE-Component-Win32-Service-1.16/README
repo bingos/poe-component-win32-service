@@ -1,0 +1,20 @@
+POE::Component::Win32::Service
+==============================
+
+Installation instructions:
+
+Unpack the distribution.
+
+perl Makefile.PL
+nmake
+nmake test
+nmake install
+
+Enjoy!
+
+Hmmm, it says 'nmake.exe' no such executable.
+
+You can obtain nmake from <http://support.microsoft.com/default.aspx?scid=kb;en-us;Q132084>
+
+You may also want to investigate getting the Microsoft Visual C++ Toolkit 2003
+<http://msdn.microsoft.com/visualc/vctoolkit2003/> 

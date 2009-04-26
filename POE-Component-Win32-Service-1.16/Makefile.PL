@@ -1,0 +1,13 @@
+use lib 'mylib'; use Devel::AssertOS qw(Cygwin MSWin32);
+use inc::Module::Install;
+name 'POE-Component-Win32-Service';
+author 'Chris Williams <chris@bingosnet.co.uk>';
+license 'perl';
+version_from 'lib/POE/Component/Win32/Service.pm';
+abstract_from 'lib/POE/Component/Win32/Service.pm';
+build_requires 'Test::More' => 0.47;
+requires 'Win32::Service' => 0;
+requires 'Carp'   => 0;
+requires 'POE'    => 0.38;
+no_index directory => 'mylib';
+WriteAll();
