@@ -1,6 +1,9 @@
 POE::Component::Win32::Service
 ==============================
 
+1.10	Tue Feb 19 14:28:07 GMT 2008
+	- Added Devel::AssertOS to Makefile.PL
+
 1.09	Mon Jan  7 10:18:48 GMT 2008
 	- Tidied up test names
 
