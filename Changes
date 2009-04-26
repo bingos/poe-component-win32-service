@@ -1,6 +1,12 @@
 POE::Component::Win32::Service
 ==============================
 
+1.07	Tue Aug 21 12:01:29 BST 2007
+	- Forgot to update Changes file.
+
+1.06	Tue Aug 21 12:01:29 BST 2007
+	- Fixes to Makefile.PL, changed to Module::Install.
+
 1.05	Wed Oct 25 14:34:03 BST 2006
 	- Added another example script
 	- Restart wheel on error unless shutting
