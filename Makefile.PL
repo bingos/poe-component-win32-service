@@ -1,15 +1,11 @@
 use inc::Module::Install;
-
+name 'POE-Component-Win32-Service';
 author 'Chris Williams <chris@bingosnet.co.uk>';
 license 'perl';
-
-WriteMakefile(
-			  'NAME'	=> 'POE::Component::Win32::Service',
-			  'PREREQ_PM' => {
-					  'POE'    => 0.38,
-					  'Win32::Service' => 0,
-					  'Carp'   => 0,
-					 },
-			  'VERSION_FROM' => 'lib/POE/Component/Win32/Service.pm',
-			  'dist' => { 'COMPRESS' => 'gzip --best' },
-			 );
+version_from 'lib/POE/Component/Win32/Service.pm';
+abstract_from 'lib/POE/Component/Win32/Service.pm';
+build_requires 'Test::More' => 0.47;
+requires 'Win32::Service' => 0;
+requires 'Carp'   => 0;
+requires 'POE'    => 0.38;
+WriteAll();
