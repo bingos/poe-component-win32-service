@@ -18,21 +18,18 @@ use Win32::Service qw(StartService StopService GetStatus PauseService ResumeServ
 use Carp qw(carp croak);
 use vars qw($VERSION);
 
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 our %cmd_map = ( qw(start StartService stop StopService restart RestartService status GetStatus pause PauseService resume ResumeService services GetServices) );
 
 
 sub spawn {
-  my ($package) = shift;
+  my $package = shift;
   croak "$package needs an even number of parameters" if @_ & 1;
   my %params = @_;
 
-  foreach my $param ( keys %params ) {
-     $params{ lc $param } = delete ( $params{ $param } );
-  }
-
-  my $options = delete ( $params{'options'} );
+  $params{ lc $_ } = delete $params{$_} for keys %params;
+  my $options = delete $params{'options'};
 
   my $self = bless \%params, $package;
 
@@ -47,7 +44,7 @@ sub spawn {
 			   'services' => 'request',
 			   'shutdown' => '_shutdown',
 		},
-	  	$self => [ qw(_start wheel_close wheel_err wheel_out wheel_stderr) ],
+	  	$self => [ qw(_start wheel_close wheel_err wheel_out wheel_stderr _sig_chld) ],
 	  ],
 	  ( ( defined ( $options ) and ref ( $options ) eq 'HASH' ) ? ( options => $options ) : () ),
   )->ID();
@@ -68,6 +65,8 @@ sub _start {
 	$kernel->refcount_increment( $self->{session_id} => __PACKAGE__ );
   }
 
+  $kernel->sig( 'CHLD' => '_sig_chld' );
+
   $self->{wheel} = POE::Wheel::Run->new(
 	  Program     => \&process_requests,
 	  CloseOnCall => 0,
@@ -83,6 +82,11 @@ sub _start {
   undef;
 }
 
+sub _sig_chld {
+  $_[KERNEL]->sig( 'CHLD' );
+  $_[KERNEL]->sig_handled();
+}
+
 sub _shutdown {
   my ($kernel,$self) = @_[KERNEL,OBJECT];
 
@@ -91,9 +95,7 @@ sub _shutdown {
   } else {
 	$kernel->refcount_decrement( $self->{session_id} => __PACKAGE__ );
   }
-  if ( $self->{wheel} ) {
-	  $self->{wheel}->shutdown_stdin;
-  }
+  $self->{wheel}->shutdown_stdin if $self->{wheel};
   undef;
 }
 
@@ -133,30 +135,31 @@ sub request {
 
 sub wheel_out {
   my ($kernel,$self,$input) = @_[KERNEL,OBJECT,ARG0];
-
-  delete ( $input->{func} );
-  my ($session) = delete ( $input->{session} );
-  my ($event) = delete ( $input->{event} );
-
+  delete $input->{func};
+  my $session = delete $input->{session};
+  my $event = delete $input->{event};
   $kernel->post( $session, $event, $input );
-  
   $kernel->refcount_decrement( $session => __PACKAGE__ );
   undef;
 }
 
 sub wheel_stderr {
   my ($kernel,$self,$input) = @_[KERNEL,OBJECT,ARG0];
-
-  warn "$input\n" if ( $self->{debug} );
+  warn "$input\n" if $self->{debug};
+  undef;
 }
 
 sub wheel_err {
-    my ($self,$operation, $errnum, $errstr, $wheel_id) = @_[OBJECT,ARG0..ARG3];
-    warn "Wheel $wheel_id generated $operation error $errnum: $errstr\n" if ( $self->{debug} );
+  my ($self,$operation, $errnum, $errstr, $wheel_id) = @_[OBJECT,ARG0..ARG3];
+  warn "Wheel $wheel_id generated $operation error $errnum: $errstr\n" if $self->{debug};
+  delete $self->{wheel};
+  undef;
 }
 
 sub wheel_close {
-	warn "Wheel closed\n" if ( $_[OBJECT]->{debug} );
+  warn "Wheel closed\n" if $_[OBJECT]->{debug};
+  delete $_[OBJECT]->{wheel};
+  undef;
 }
 
 # Object methods
@@ -166,17 +169,17 @@ sub session_id {
 }
 
 sub yield {
-   my ($self) = shift;
+   my $self = shift;
    $poe_kernel->post( $self->session_id() => @_ );
 }
 
 sub call {
-   my ($self) = shift;
+   my $self = shift;
    $poe_kernel->call( $self->session_id() => @_ );
 }
 
 sub shutdown {
-   my ($self) = shift;
+   my $self = shift;
    $self->yield( 'shutdown' );
 }
 
@@ -293,25 +296,37 @@ POE::Component::Win32::Service - A POE component that provides non-blocking acce
 
 =head1 DESCRIPTION
 
-POE::Component::Win32::Service is a L<POE|POE> component that provides a non-blocking wrapper around
-L<Win32::Service|Win32::Service>, so one can start, stop, restart, pause and resume services, query the 
+POE::Component::Win32::Service is a L<POE> component that provides a non-blocking wrapper around
+L<Win32::Service>, so one can start, stop, restart, pause and resume services, query the 
 status of services or just get a list of services, from the comfort of your POE sessions and applications.
 
-Consult the L<Win32::Service|Win32::Service> documentation for more details.
+Consult the L<Win32::Service> documentation for more details.
 
-=head1 METHODS
+=head1 CONSTRUCTOR
 
 =over
 
 =item spawn
 
-Takes a number of arguments, all of which are optional. 'alias', the kernel alias to bless the component with;
-'debug', set this to 1 to see component debug information; 'options', a hashref of L<POE::Session|POE::Session> 
-options that are passed to the component's session creator.
+Takes a number of arguments, all of which are optional: 
+
+  'alias', the kernel alias to bless the component with;
+  'debug', set this to 1 to see component debug information; 
+  'options', a hashref of POE::Session options that are passed to the component's session creator.
+
+Returns a POE::Component::Win32::Service object on success.
+
+=back
+
+=head1 METHODS
+
+These are methods that are applicable to the POE::Component::Win32::Service object.
+
+=over
 
 =item session_id
 
-Takes no arguments, returns the L<POE::Session|POE::Session> ID of the component. Useful if you don't want to use
+Takes no arguments, returns the L<POE::Session> ID of the component. Useful if you don't want to use
 aliases.
 
 =item yield
@@ -331,8 +346,12 @@ This method provides an alternative object based means of calling events to the 
 =head1 INPUT
 
 These are the events that the component will accept. Each event requires a hashref as an argument with the following keys:
-'service', the short form of the service to manipulate; 'host', which host to query ( default is localhost ); 'event', the
-name of the event handler in *your* session that you want the result of the requested operation to go to. 'event' is mandatory for all requests. 'service' is mandatory for all requests, except for 'services'.
+
+  'service', the short form of the service to manipulate; 
+  'host', which host to query ( default is localhost ); 
+  'event', the name of the event handler in *your* session that you want the result go to;
+ 
+'event' is mandatory for all requests. 'service' is mandatory for all requests, except for 'services'.
 
 It is possible to pass arbitary data in the request hashref that could be used in the resultant event handler. Simply define additional key/value pairs of your own. It is recommended that one prefixes keys with '_' to avoid future clashes.
 
@@ -400,4 +419,6 @@ Chris Williams <chris@bingosnet.co.uk>
 
 =head1 SEE ALSO
 
-L<Win32::Service|Win32::Service>
+L<Win32::Service>
+
+L<POE>
