@@ -1,0 +1,6 @@
+lib/POE/Component/Win32/Service.pm
+t/1.t
+README
+MANIFEST
+Makefile.PL
+META.yml                                 Module meta-data (added by MakeMaker)
