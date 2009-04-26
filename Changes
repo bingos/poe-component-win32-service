@@ -1,6 +1,9 @@
 POE::Component::Win32::Service
 ==============================
 
+1.14	Wed Feb 20 19:16:23 GMT 2008
+	- Oops forgot to no_index 'mylib'.
+
 1.12    Wed Feb 20 17:06:39 GMT 2008
         - Moved Devel::AssertOS to mylib/ to avoid
           Module::Install trampling on it.

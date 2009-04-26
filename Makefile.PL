@@ -9,4 +9,5 @@ build_requires 'Test::More' => 0.47;
 requires 'Win32::Service' => 0;
 requires 'Carp'   => 0;
 requires 'POE'    => 0.38;
+no_index directory => 'mylib';
 WriteAll();
