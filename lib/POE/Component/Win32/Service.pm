@@ -18,7 +18,7 @@ use Win32::Service qw(StartService StopService GetStatus PauseService ResumeServ
 use Carp qw(carp croak);
 use vars qw($VERSION);
 
-$VERSION = '1.20';
+$VERSION = '1.22';
 
 our %cmd_map = ( qw(start StartService stop StopService restart RestartService status GetStatus pause PauseService resume ResumeService services GetServices) );
 
@@ -424,6 +424,12 @@ This module will only work on Win32. But you guessed that already :)
 =head1 AUTHOR
 
 Chris Williams <chris@bingosnet.co.uk>
+
+=head1 LICENSE
+
+Copyright C<(c)> Chris Williams.
+
+This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
