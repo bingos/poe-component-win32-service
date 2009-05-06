@@ -18,7 +18,7 @@ use Win32::Service qw(StartService StopService GetStatus PauseService ResumeServ
 use Carp qw(carp croak);
 use vars qw($VERSION);
 
-$VERSION = '1.22';
+$VERSION = '1.24';
 
 our %cmd_map = ( qw(start StartService stop StopService restart RestartService status GetStatus pause PauseService resume ResumeService services GetServices) );
 
@@ -314,7 +314,7 @@ Consult the L<Win32::Service> documentation for more details.
 
 =over
 
-=item spawn
+=item C<spawn>
 
 Takes a number of arguments, all of which are optional: 
 
@@ -332,18 +332,18 @@ These are methods that are applicable to the POE::Component::Win32::Service obje
 
 =over
 
-=item session_id
+=item C<session_id>
 
 Takes no arguments, returns the L<POE::Session> ID of the component. Useful if you don't want to use
 aliases.
 
-=item yield
+=item C<yield>
 
 This method provides an alternative object based means of posting events to the component. First argument is the event to post, following arguments are sent as arguments to the resultant post.
 
   $poco->yield( 'restart' => { host => 'win32server', service => 'someservice', event => 'result' } );
 
-=item call
+=item C<call>
 
 This method provides an alternative object based means of calling events to the component. First argument is the event to call, following arguments are sent as arguments to the resultant call.
 
@@ -365,35 +365,35 @@ It is possible to pass arbitary data in the request hashref that could be used i
 
 =over
 
-=item start
+=item C<start>
 
 Starts the requested service on the requested host.
 
-=item stop
+=item C<stop>
 
 Stops the requested service on the requested host.
 
-=item restart
+=item C<restart>
 
 Stops and starts the requested service on the requested host.
 
-=item pause
+=item C<pause>
 
 Pauses the requested service on the requested host.
 
-=item resume
+=item C<resume>
 
 Resumes the requested service on the requested host.
 
-=item status
+=item C<status>
 
 Retrieves the status of the requested service on the requested host.
 
-=item services
+=item C<services>
 
 Retrieves a list of services on the requested host.
 
-=item shutdown
+=item C<shutdown>
 
 Takes no arguments. Terminates the component.
 
@@ -407,11 +407,11 @@ The hashref will contain keys for 'service', 'host' and 'state'. The first two a
 
 =over
 
-=item result
+=item C<result>
 
 For most cases this will be just a true value. For 'status', it will be a hashref that will be populated with entries corresponding to the SERVICE_STATUS structure of the Win32 API. See the Win32 Platform SDK documentation for details of this structure. For 'services' it will be a hashref populated with the descriptive service names as keys and the short names as the values.
 
-=item error
+=item C<error>
 
 In the event of an error occurring this will be defined. It is an arrayref which contains the error code and the formatted error relating to that code.
 
@@ -423,11 +423,11 @@ This module will only work on Win32. But you guessed that already :)
 
 =head1 AUTHOR
 
-Chris Williams <chris@bingosnet.co.uk>
+Chris C<BinGOs> Williams <chris@bingosnet.co.uk>
 
 =head1 LICENSE
 
-Copyright C<(c)> Chris Williams.
+Copyright E<copy> Chris Williams.
 
 This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
