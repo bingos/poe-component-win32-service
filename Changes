@@ -1,6 +1,10 @@
 POE::Component::Win32::Service
 ==============================
 
+1.24	Wed May  6 14:32:34 BST 2009
+	- Update to use auto_license and githubmeta
+	- Pod tidying
+
 1.22	Tue May 13 14:18:37 GMTDT 2008
 	- added license information
 
