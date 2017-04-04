@@ -1,5 +1,7 @@
 package POE::Component::Win32::Service;
 
+#ABSTRACT: A POE component that provides non-blocking access to Win32::Service.
+
 # Author: Chris "BinGOs" Williams
 #
 # This module may be used, modified, and distributed under the same
@@ -16,9 +18,6 @@ use POE::Filter::Reference;
 use Win32;
 use Win32::Service qw(StartService StopService GetStatus PauseService ResumeService GetServices);
 use Carp qw(carp croak);
-use vars qw($VERSION);
-
-$VERSION = '1.24';
 
 our %cmd_map = ( qw(start StartService stop StopService restart RestartService status GetStatus pause PauseService resume ResumeService services GetServices) );
 
@@ -109,7 +108,7 @@ sub _shutdown {
 sub _request {
   my ($kernel,$self,$state,$sender) = @_[KERNEL,OBJECT,STATE,SENDER];
   $sender = $sender->ID();
-  
+
   # Get the arguments
   my $args;
   if (ref($_[ARG0]) eq 'HASH') {
@@ -119,7 +118,7 @@ sub _request {
 		."(fix this to get rid of this message)";
 	$args = { @_[ARG0 .. $#_ ] };
   }
-  
+
   unless ( $args->{service} or $state eq 'services' ) {
 	warn "you must supply a service argument, otherwise what's the point";
 	return;
@@ -259,11 +258,7 @@ sub _error_codes {
 
 1;
 
-__END__
-
-=head1 NAME
-
-POE::Component::Win32::Service - A POE component that provides non-blocking access to Win32::Service.
+=pod
 
 =head1 SYNOPSIS
 
@@ -316,7 +311,7 @@ Consult the L<Win32::Service> documentation for more details.
 
 =item C<spawn>
 
-Takes a number of arguments, all of which are optional: 
+Takes a number of arguments, all of which are optional:
 
   'alias', the kernel alias to bless the component with;
   'debug', set this to 1 to see component debug information; 
@@ -358,7 +353,7 @@ These are the events that the component will accept. Each event requires a hashr
   'service', the short form of the service to manipulate; 
   'host', which host to query ( default is localhost ); 
   'event', the name of the event handler in *your* session that you want the result go to;
- 
+
 'event' is mandatory for all requests. 'service' is mandatory for all requests, except for 'services'.
 
 It is possible to pass arbitary data in the request hashref that could be used in the resultant event handler. Simply define additional key/value pairs of your own. It is recommended that one prefixes keys with '_' to avoid future clashes.
@@ -420,16 +415,6 @@ In the event of an error occurring this will be defined. It is an arrayref which
 =head1 CAVEATS
 
 This module will only work on Win32. But you guessed that already :)
-
-=head1 AUTHOR
-
-Chris C<BinGOs> Williams <chris@bingosnet.co.uk>
-
-=head1 LICENSE
-
-Copyright E<copy> Chris Williams.
-
-This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
